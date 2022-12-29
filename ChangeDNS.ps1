@@ -48,6 +48,11 @@ $Unchanged = 0
 $Offline = 0
 $Errors = 0
 
+$ChangedArray = New-Object -TypeName 'System.Collections.ArrayList';
+$UnchangedArray = New-Object -TypeName 'System.Collections.ArrayList';
+$OfflineArray = New-Object -TypeName 'System.Collections.ArrayList';
+$ErrorArray = New-Object -TypeName 'System.Collections.ArrayList';
+
 $Computers = (Get-ADComputer -Filter * -SearchBase $OUPath | Select-Object Name).Name
 ""
 foreach ($Computer in $Computers) {
@@ -86,6 +91,7 @@ foreach ($Computer in $Computers) {
                         Write-Host "  New DNS servers:     " -NoNewline
                         Write-Host $($NewDNS -join ", ") -ForegroundColor Green
                         $Changed++
+                        $ChangedArray.Add($Computer) | Out-Null
                     }
                     else {
                         try {
@@ -94,23 +100,27 @@ foreach ($Computer in $Computers) {
                                 Write-Host "  New DNS servers:     " -NoNewline
                                 Write-Host $($NewDNS -join ", ") -ForegroundColor Green
                                 $Changed++
+                                $ChangedArray.Add($Computer) | Out-Null
                             }
                             else {
                                 Write-Host "  SetDNSServerSearchOrder terminated with error code $($Result.ReturnValue)" -ForegroundColor Red
                                 Write-Host "  Refer to https://learn.microsoft.com/en-us/windows/win32/cimwin32prov/setdnsserversearchorder-method-in-class-win32-networkadapterconfiguration for more information about the error code."
                                 $Errors++
+                                $ErrorArray.Add($Computer) | Out-Null
                                 }
                         }
                         catch {
                             Write-Host "  ERROR: Unable to change the DNS servers on $Computer" -ForegroundColor Red
                             Write-Host $_
                             $Errors++
+                            $ErrorArray.Add($Computer) | Out-Null
                         }
                     }
                 }
                 else {
                     Write-Host "  No change is required" -ForegroundColor Blue
                     $Unchanged++
+                    $UnchangedArray.Add($Computer) | Out-Null
                 }
             }
 
@@ -118,12 +128,14 @@ foreach ($Computer in $Computers) {
         if (!$NICFound) {
             Write-Host "  No network interface is found with IP prefix $LocalIPPrefix" -ForegroundColor Blue
             $Unchanged++
+            $UnchangedArray.Add($Computer) | Out-Null
         }
     }
     else {
         Write-Host " is " -NoNewline
         Write-Host "offline" -ForegroundColor Red
         $Offline++
+        $OfflineArray.Add($Computer) | Out-Null
     }
     Write-Host ""
 }
@@ -141,3 +153,34 @@ Write-Host $Offline -ForegroundColor Red -NoNewline
 Write-Host "; Error: " -NoNewline
 Write-Host $Errors -ForegroundColor Red
 ""
+
+Write-Host "Writing log file $env:TEMP\ChangeDNS_$(Get-Date -Format "yyyyMMddHHmmss").log... " -NoNewline
+$Output = ""
+$FirstItem = $true
+if ($ChangedArray.Count -gt 0) {
+    $Output += "Changed:`r`n$($ChangedArray -join "`r`n")`r`n"
+    $FirstItem = $false
+}
+if ($UnchangedArray.Count -gt 0) {
+    if(!$FirstItem) {
+        $Output += "`r`n"
+    }
+    $Output += "Unchanged:`r`n$($UnchangedArray -join "`r`n")`r`n"
+    $FirstItem = $false
+}
+if ($OfflineArray.Count -gt 0) {
+    if(!$FirstItem) {
+        $Output += "`r`n"
+    }
+    $Output += "Offline:`r`n$($OfflineArray -join "`r`n")`r`n"
+    $FirstItem = $false
+}
+if ($ErrorArray.Count -gt 0) {
+    if(!$FirstItem) {
+        $Output += "`r`n"
+    }
+    $Output += "Error:`r`n$($ErrorArray -join "`r`n")`r`n"
+    $FirstItem = $false
+}
+$Output | Out-File -FilePath "$env:TEMP\ChangeDNS_$(Get-Date -Format "yyyyMMddHHmmss").log" -NoNewline
+Write-Host "Done`r`n"
