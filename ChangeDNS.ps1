@@ -55,7 +55,16 @@ foreach ($Computer in $Computers) {
     Write-Host "$Computer" -NoNewline
     if (Test-Connection $Computer -Quiet -Count 2) {
         Write-Host ":"
-        $NICs = Get-WMIObject Win32_NetworkAdapterConfiguration -ComputerName $Computer
+        try {
+            $NICs = Get-WMIObject Win32_NetworkAdapterConfiguration -ComputerName $Computer
+        }
+        catch {
+            Write-Host "  ERROR: Unable to change the DNS servers on $Computer" -ForegroundColor Red
+            Write-Host $_
+            $Errors++
+            $ErrorArray.Add($Computer) | Out-Null
+            continue
+        }
         foreach ($NIC in $NICs) {
             if ((@($NIC.IPAddress) -like $LocalIPPrefix).Count -gt 0) {
                 $NICFound = $true
