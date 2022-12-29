@@ -4,15 +4,18 @@
 .DESCRIPTION
     This script scans through all the interfaces on all the computers in the specified OU. Only the DNS settings of the interfaces with the specified IP address prefix are changed. A summary will be written to a log file in the temp folder.
 .PARAMETER OU
-    Required.
+    Required if PrevLog is not defined.
     Specify the path of the OU, e.g. "example.com\parentOU\childOU".
     Forward slashes or back slashes can be used.
 .PARAMETER LocalIPPrefix
-    Required.
+    Required if PrevLog is not defined.
     Specify the prefix of the IP address that the target network interface is using, e.g. "192.168.0.*".
 .PARAMETER NewDNS
-    Required.
+    Required if PrevLog is not defined.
     Specify the new DNS servers, separate with commas if there are more than one addresses, e.g. "192.168.1.1", "192.168.1.2".
+.PARAMETER PrevLog
+    Optional.
+    Specify the log file to read the previous settings of LocalIPPrefix and NewDNS, and the PCs that failed to update (in Offline status or Error status in the previous run)
 .PARAMETER DryRun
     Switch. Optional.
     If this is on, no actual change will be made, but a preview of the changes will be shown.
