@@ -42,7 +42,11 @@ Param(
 
 $Computers = @()
 
-if ($PrevLog -eq $null) {
+if ($PrevLog -eq "") {
+    if ($OU -eq "" -or $LocalIPPrefix -eq "" -or $null -eq $NewDNS) {
+        Write-Host "ERROR: Please specify all the following parameters since PrevLog is not defined: OU, LocalIPPrefix, NewDNS" -ForegroundColor Red
+        return
+    }
     $OUTemp1 = $OU -split "[\\/]"
     $OUTemp2 = $OUTemp1[($OUTemp1.Length-1)..1]
     $OUPath = "OU=" + ($OUTemp2 -join ",OU=") + ",DC=" + (($OUTemp1[0] -split "\.") -join ",DC=")
