@@ -65,7 +65,13 @@ else {
             }
         }
         else {
-            if ($Line -eq "Offline:" -or $Line -eq "Error:") {
+            if ($Line -like "LocalIPPrefix*") {
+                $LocalIPPrefix = ($Line -split ":")[1]
+            }
+            elseif ($Line -like "NewDNS*") {
+                $NewDNS = (($Line -split ":")[1] -split ",")
+            }
+            elseif ($Line -eq "Offline:" -or $Line -eq "Error:") {
                 $ReadLine = $true
             }
 
