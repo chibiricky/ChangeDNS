@@ -2,7 +2,7 @@
 .SYNOPSIS
     A script to change DNS settings in bulk on all PCs on a particular OU
 .DESCRIPTION
-    This script scans through all the interfaces on all the computers in the specified OU. Only the DNS settings of the interfaces that match the specified IP address prefix are changed. A summary will be written to a log file in the temp folder.
+    This script scans through all the interfaces on all the computers in the specified OU. Only the DNS settings of the interfaces with the specified IP address prefix are changed. A summary will be written to a log file in the temp folder.
 .PARAMETER OU
     Required.
     Specify the path of the OU, e.g. "example.com\parentOU\childOU".
@@ -162,25 +162,18 @@ if ($ChangedArray.Count -gt 0) {
     $FirstItem = $false
 }
 if ($UnchangedArray.Count -gt 0) {
-    if(!$FirstItem) {
-        $Output += "`r`n"
-    }
+    if(!$FirstItem) {$Output += "`r`n"}
     $Output += "Unchanged:`r`n$($UnchangedArray -join "`r`n")`r`n"
     $FirstItem = $false
 }
 if ($OfflineArray.Count -gt 0) {
-    if(!$FirstItem) {
-        $Output += "`r`n"
-    }
+    if(!$FirstItem) {$Output += "`r`n"}
     $Output += "Offline:`r`n$($OfflineArray -join "`r`n")`r`n"
     $FirstItem = $false
 }
 if ($ErrorArray.Count -gt 0) {
-    if(!$FirstItem) {
-        $Output += "`r`n"
-    }
+    if(!$FirstItem) {$Output += "`r`n"}
     $Output += "Error:`r`n$($ErrorArray -join "`r`n")`r`n"
-    $FirstItem = $false
 }
 $Output | Out-File -FilePath "$env:TEMP\ChangeDNS_$(Get-Date -Format "yyyyMMddHHmmss").log" -NoNewline
 Write-Host "Done`r`n"
