@@ -4,15 +4,18 @@
 .DESCRIPTION
     This script scans through all the interfaces on all the computers in the specified OU. Only the DNS settings of the interfaces with the specified IP address prefix are changed. A summary will be written to a log file in the temp folder.
 .PARAMETER OU
-    Required.
+    Required if PrevLog is not defined.
     Specify the path of the OU, e.g. "example.com\parentOU\childOU".
     Forward slashes or back slashes can be used.
 .PARAMETER LocalIPPrefix
-    Required.
+    Required if PrevLog is not defined.
     Specify the prefix of the IP address that the target network interface is using, e.g. "192.168.0.*".
 .PARAMETER NewDNS
-    Required.
+    Required if PrevLog is not defined.
     Specify the new DNS servers, separate with commas if there are more than one addresses, e.g. "192.168.1.1", "192.168.1.2".
+.PARAMETER PrevLog
+    Optional.
+    Specify the log file to read the previous settings of LocalIPPrefix and NewDNS, and the PCs that failed to update (in Offline status or Error status in the previous run)
 .PARAMETER DryRun
     Switch. Optional.
     If this is on, no actual change will be made, but a preview of the changes will be shown.
@@ -33,15 +36,51 @@
 
 
 Param(
-    [Parameter(Mandatory=$true)] [string] $OU,
-    [Parameter(Mandatory=$true)] [string] $LocalIPPrefix,
-    [Parameter(Mandatory=$true)] [string[]] $NewDNS,
+    [string] $OU,
+    [string] $LocalIPPrefix,
+    [string[]] $NewDNS,
+    [string] $PrevLog,
     [Switch] $DryRun
 )
 
-$OUTemp1 = $OU -split "[\\/]"
-$OUTemp2 = $OUTemp1[($OUTemp1.Length-1)..1]
-$OUPath = "OU=" + ($OUTemp2 -join ",OU=") + ",DC=" + (($OUTemp1[0] -split "\.") -join ",DC=")
+$Computers = @()
+
+if ($PrevLog -eq "") {
+    if ($OU -eq "" -or $LocalIPPrefix -eq "" -or $null -eq $NewDNS) {
+        Write-Host "ERROR: Please specify all the following parameters since PrevLog is not defined: OU, LocalIPPrefix, NewDNS" -ForegroundColor Red
+        return
+    }
+    $OUTemp1 = $OU -split "[\\/]"
+    $OUTemp2 = $OUTemp1[($OUTemp1.Length-1)..1]
+    $OUPath = "OU=" + ($OUTemp2 -join ",OU=") + ",DC=" + (($OUTemp1[0] -split "\.") -join ",DC=")
+    $Computers = (Get-ADComputer -Filter * -SearchBase $OUPath | Select-Object Name).Name
+}
+else {
+    $FileData = Get-Content $PrevLog
+    $ReadLine = $false
+    foreach ($Line in $FileData) {
+        if ($ReadLine) {
+            if ($Line -ne "Offline:" -and $Line -ne "Error:" -and $Line -ne "") {
+                $Computers += $Line    
+            }
+            else {
+                $ReadLine = $false
+            }
+        }
+        else {
+            if ($Line -like "LocalIPPrefix*") {
+                $LocalIPPrefix = ($Line -split ":")[1]
+            }
+            elseif ($Line -like "NewDNS*") {
+                $NewDNS = (($Line -split ":")[1] -split ",")
+            }
+            elseif ($Line -eq "Offline:" -or $Line -eq "Error:") {
+                $ReadLine = $true
+            }
+
+        }
+    }
+}
 
 $Changed = 0
 $Unchanged = 0
@@ -53,7 +92,6 @@ $UnchangedArray = New-Object -TypeName 'System.Collections.ArrayList';
 $OfflineArray = New-Object -TypeName 'System.Collections.ArrayList';
 $ErrorArray = New-Object -TypeName 'System.Collections.ArrayList';
 
-$Computers = (Get-ADComputer -Filter * -SearchBase $OUPath | Select-Object Name).Name
 ""
 foreach ($Computer in $Computers) {
     $NICFound = $false
