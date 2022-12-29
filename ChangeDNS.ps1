@@ -2,7 +2,7 @@
 .SYNOPSIS
     A script to change DNS settings in bulk on all PCs on a particular OU
 .DESCRIPTION
-    This script scans through all the interfaces on all the computers in the specified OU. Only the DNS settings of the interfaces that match the specified IP address prefix are changed.
+    This script scans through all the interfaces on all the computers in the specified OU. Only the DNS settings of the interfaces that match the specified IP address prefix are changed. A summary will be written to a log file in the temp folder.
 .PARAMETER OU
     Required.
     Specify the path of the OU, e.g. "example.com\parentOU\childOU".
