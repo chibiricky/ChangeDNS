@@ -33,15 +33,41 @@
 
 
 Param(
-    [Parameter(Mandatory=$true)] [string] $OU,
-    [Parameter(Mandatory=$true)] [string] $LocalIPPrefix,
-    [Parameter(Mandatory=$true)] [string[]] $NewDNS,
+    [string] $OU,
+    [string] $LocalIPPrefix,
+    [string[]] $NewDNS,
+    [string] $PrevLog,
     [Switch] $DryRun
 )
 
-$OUTemp1 = $OU -split "[\\/]"
-$OUTemp2 = $OUTemp1[($OUTemp1.Length-1)..1]
-$OUPath = "OU=" + ($OUTemp2 -join ",OU=") + ",DC=" + (($OUTemp1[0] -split "\.") -join ",DC=")
+$Computers = @()
+
+if ($PrevLog -eq $null) {
+    $OUTemp1 = $OU -split "[\\/]"
+    $OUTemp2 = $OUTemp1[($OUTemp1.Length-1)..1]
+    $OUPath = "OU=" + ($OUTemp2 -join ",OU=") + ",DC=" + (($OUTemp1[0] -split "\.") -join ",DC=")
+    $Computers = (Get-ADComputer -Filter * -SearchBase $OUPath | Select-Object Name).Name
+}
+else {
+    $FileData = Get-Content $PrevLog
+    $ReadLine = $false
+    foreach ($Line in $FileData) {
+        if ($ReadLine) {
+            if ($Line -ne "Offline:" -and $Line -ne "Error:" -and $Line -ne "") {
+                $Computers += $Line    
+            }
+            else {
+                $ReadLine = $false
+            }
+        }
+        else {
+            if ($Line -eq "Offline:" -or $Line -eq "Error:") {
+                $ReadLine = $true
+            }
+
+        }
+    }
+}
 
 $Changed = 0
 $Unchanged = 0
@@ -53,7 +79,6 @@ $UnchangedArray = New-Object -TypeName 'System.Collections.ArrayList';
 $OfflineArray = New-Object -TypeName 'System.Collections.ArrayList';
 $ErrorArray = New-Object -TypeName 'System.Collections.ArrayList';
 
-$Computers = (Get-ADComputer -Filter * -SearchBase $OUPath | Select-Object Name).Name
 ""
 foreach ($Computer in $Computers) {
     $NICFound = $false
