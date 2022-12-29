@@ -155,7 +155,9 @@ Write-Host $Errors -ForegroundColor Red
 ""
 
 Write-Host "Writing log file $env:TEMP\ChangeDNS_$(Get-Date -Format "yyyyMMddHHmmss").log... " -NoNewline
-$Output = ""
+$Output = "$(Get-Date -Format "yyyy/MM/dd HH:mm:ss")`r`n"
+$Output += "LocalIPPrefix:$LocalIPPrefix`r`n"
+$Output += "NewDNS:$($NewDNS -join ',')`r`n`r`n"
 $FirstItem = $true
 if ($ChangedArray.Count -gt 0) {
     $Output += "Changed:`r`n$($ChangedArray -join "`r`n")`r`n"
