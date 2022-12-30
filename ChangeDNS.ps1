@@ -76,12 +76,16 @@ if ($PrevLog -ne "") {
     }
 }
 else {
+    if (($OU -eq "" -and $PC -eq "") -or $LocalIPPrefix -eq "" -or $NewDNS -eq "") {
+        Write-Host "Syntax Error" -ForegroundColor Red
+        exit
+    }
     if ($null -ne $PC) {
         $Computers = $PC
     } else {
         if ($OU -eq "" -or $LocalIPPrefix -eq "" -or $null -eq $NewDNS) {
-            Write-Host "ERROR: Please specify all the following parameters since PrevLog is not defined: OU, LocalIPPrefix, NewDNS" -ForegroundColor Red
-            return
+            Write-Host "Syntax Error" -ForegroundColor Red
+            exit
         }
         $OUTemp1 = $OU -split "[\\/]"
         $OUTemp2 = $OUTemp1[($OUTemp1.Length-1)..1]
