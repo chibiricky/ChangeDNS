@@ -16,6 +16,9 @@
 .PARAMETER PrevLog
     Optional.
     Specify the log file to read the previous settings of LocalIPPrefix and NewDNS, and the PCs that failed to update (in Offline status or Error status in the previous run)
+.PARAMETER PC
+    Optional. No effect if PrevLog is defined.
+    Specify the computer name(s) of the target PC(s).
 .PARAMETER DryRun
     Switch. Optional.
     If this is on, no actual change will be made, but a preview of the changes will be shown.
@@ -40,22 +43,13 @@ Param(
     [string] $LocalIPPrefix,
     [string[]] $NewDNS,
     [string] $PrevLog,
+    [string[]] $PC,
     [Switch] $DryRun
 )
 
 $Computers = @()
 
-if ($PrevLog -eq "") {
-    if ($OU -eq "" -or $LocalIPPrefix -eq "" -or $null -eq $NewDNS) {
-        Write-Host "ERROR: Please specify all the following parameters since PrevLog is not defined: OU, LocalIPPrefix, NewDNS" -ForegroundColor Red
-        return
-    }
-    $OUTemp1 = $OU -split "[\\/]"
-    $OUTemp2 = $OUTemp1[($OUTemp1.Length-1)..1]
-    $OUPath = "OU=" + ($OUTemp2 -join ",OU=") + ",DC=" + (($OUTemp1[0] -split "\.") -join ",DC=")
-    $Computers = (Get-ADComputer -Filter * -SearchBase $OUPath | Select-Object Name).Name
-}
-else {
+if ($PrevLog -ne "") {
     $FileData = Get-Content $PrevLog
     $ReadLine = $false
     foreach ($Line in $FileData) {
@@ -79,6 +73,20 @@ else {
             }
 
         }
+    }
+}
+else {
+    if ($null -ne $PC) {
+        $Computers = $PC
+    } else {
+        if ($OU -eq "" -or $LocalIPPrefix -eq "" -or $null -eq $NewDNS) {
+            Write-Host "ERROR: Please specify all the following parameters since PrevLog is not defined: OU, LocalIPPrefix, NewDNS" -ForegroundColor Red
+            return
+        }
+        $OUTemp1 = $OU -split "[\\/]"
+        $OUTemp2 = $OUTemp1[($OUTemp1.Length-1)..1]
+        $OUPath = "OU=" + ($OUTemp2 -join ",OU=") + ",DC=" + (($OUTemp1[0] -split "\.") -join ",DC=")
+        $Computers = (Get-ADComputer -Filter * -SearchBase $OUPath | Select-Object Name).Name
     }
 }
 
