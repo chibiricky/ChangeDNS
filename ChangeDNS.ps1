@@ -204,7 +204,6 @@ Write-Host "; Error: " -NoNewline
 Write-Host $Errors -ForegroundColor Red
 ""
 
-Write-Host "Writing log file $env:TEMP\ChangeDNS_$(Get-Date -Format "yyyyMMddHHmmss").log... " -NoNewline
 $Output = "$(Get-Date -Format "yyyy/MM/dd HH:mm:ss")`r`n"
 $Output += "LocalIPPrefix:$LocalIPPrefix`r`n"
 $Output += "NewDNS:$($NewDNS -join ',')`r`n`r`n"
@@ -227,5 +226,10 @@ if ($ErrorArray.Count -gt 0) {
     if(!$FirstItem) {$Output += "`r`n"}
     $Output += "Error:`r`n$($ErrorArray -join "`r`n")`r`n"
 }
-$Output | Out-File -FilePath "$env:TEMP\ChangeDNS_$(Get-Date -Format "yyyyMMddHHmmss").log" -NoNewline
+
+if ($ChangedArray.Count + $UnchangedArray.Count -gt 0) {
+    Write-Host "Writing log file $env:TEMP\ChangeDNS_$(Get-Date -Format "yyyyMMddHHmmss").log... " -NoNewline
+    $Output | Out-File -FilePath "$env:TEMP\ChangeDNS_$(Get-Date -Format "yyyyMMddHHmmss").log" -NoNewline
+}
+
 Write-Host "Done`r`n"
