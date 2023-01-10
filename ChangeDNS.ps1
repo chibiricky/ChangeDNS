@@ -37,7 +37,10 @@
     PS> ChangeDNS -OU "example.com\FirstOU\SecondOU" -LocalIPPrefix "10.0.1.*" -NewDNS "10.0.0.1", "10.0.0.2"
 
 .EXAMPLE
-    PS> ChangeDNS -OU "example.com\FirstOU\SecondOU" -LocalIPPrefix "10.0.1.*" -NewDNS "10.0.0.1", "10.0.0.2" -DryRun
+    PS> ChangeDNS -PC "MyPC1","MyPC2" -LocalIPPrefix "10.0.1.*" -NewDNS "10.0.0.1", "10.0.0.2"
+
+.EXAMPLE
+    PS> ChangeDNS -PrevLog "C:\Temp\ChangeDNS_209912312359.log"
 #>
 
 
