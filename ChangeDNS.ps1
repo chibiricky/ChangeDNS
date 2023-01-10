@@ -115,11 +115,11 @@ foreach ($Computer in $Computers) {
     if (Test-Connection $Computer -Quiet -Count 2) {
         Write-Host ":"
         try {
-            $NICs = Get-WMIObject Win32_NetworkAdapterConfiguration -ComputerName $Computer
+            $NICs = Get-WMIObject Win32_NetworkAdapterConfiguration -ComputerName $Computer -ErrorAction Stop
         }
         catch {
             Write-Host "  ERROR: Unable to change the DNS servers on $Computer" -ForegroundColor Red
-            Write-Host $_
+            Write-Host "  $_" -ForegroundColor Red
             $Errors++
             $ErrorArray.Add($Computer) | Out-Null
             continue
