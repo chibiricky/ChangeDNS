@@ -22,6 +22,9 @@
 .PARAMETER DryRun
     Switch. Optional.
     If this is on, no actual change will be made, but a preview of the changes will be shown.
+.PARAMETER NoLog
+    Switch. Optional.
+    No log will be written after the command if this switch is on.
 .INPUTS
     None
 .OUTPUTS
@@ -44,7 +47,8 @@ Param(
     [string[]] $NewDNS,
     [string] $PrevLog,
     [string[]] $PC,
-    [Switch] $DryRun
+    [Switch] $DryRun,
+    [Switch] $NoLog
 )
 
 $Computers = @()
@@ -227,9 +231,9 @@ if ($ErrorArray.Count -gt 0) {
     $Output += "Error:`r`n$($ErrorArray -join "`r`n")`r`n"
 }
 
-if ($ChangedArray.Count + $UnchangedArray.Count -gt 0) {
+if (($ChangedArray.Count + $UnchangedArray.Count -gt 0) -and (!$NoLog)) {
     Write-Host "Writing log file $env:TEMP\ChangeDNS_$(Get-Date -Format "yyyyMMddHHmmss").log... " -NoNewline
     $Output | Out-File -FilePath "$env:TEMP\ChangeDNS_$(Get-Date -Format "yyyyMMddHHmmss").log" -NoNewline
+    Write-Host "Done`r`n"
 }
 
-Write-Host "Done`r`n"
